@@ -1,0 +1,31 @@
+html, body {
+  margin: 0;
+  padding: 0;
+  background: #1a1c2c;
+  height: 100%;
+  overflow: hidden;
+  font-family: "MS Gothic", "Yu Gothic", monospace;
+}
+#wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: 10px;
+}
+#screen {
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  width: min(96vw, calc(96vh * 1.5 - 40px));
+  aspect-ratio: 3 / 2;
+  background: #000;
+  border: 4px solid #3b3f5c;
+  border-radius: 6px;
+  box-shadow: 0 8px 40px rgba(0,0,0,.6);
+}
+#hint {
+  color: #8a8fb5;
+  font-size: 13px;
+  user-select: none;
+}

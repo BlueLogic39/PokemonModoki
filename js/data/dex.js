@@ -1,0 +1,203 @@
+// トモシビ地方 モンスター図鑑 (全27種・完全オリジナル)
+// base: 種族値 / catchRate: 捕獲率(高いほど捕まえやすい, 最大255)
+// expYield: 倒したときの経験値基準 / evolve: {level, to}
+// learnset: [レベル, 技ID]
+export const DEX = [
+  {
+    no: 1, id: "leafy", name: "リーフィ", types: ["くさ"],
+    base: { hp: 45, atk: 49, def: 50, spa: 60, spd: 55, spe: 56 },
+    catchRate: 45, expYield: 64, evolve: { level: 16, to: "foresta" },
+    learnset: [[1, "taiatari"], [1, "nakigoe"], [6, "tsurunomuchi"], [10, "katakunaru"], [13, "leafcutter"], [18, "nemurigona"], [22, "leafdrain"], [28, "greenburst"], [33, "noshikakari"]],
+    desc: "しっぽの わかばで こうごうせいをして げんきを たくわえる。ひなたぼっこが だいすき。",
+  },
+  {
+    no: 2, id: "foresta", name: "フォレスタ", types: ["くさ"],
+    base: { hp: 70, atk: 78, def: 80, spa: 92, spd: 85, spe: 75 },
+    catchRate: 45, expYield: 155,
+    learnset: [[1, "taiatari"], [1, "nakigoe"], [6, "tsurunomuchi"], [13, "leafcutter"], [18, "nemurigona"], [24, "leafdrain"], [31, "greenburst"], [36, "noshikakari"]],
+    desc: "せなかの こだちは ちいさな もりと よばれる。おこると はっぱの あらしを まきおこす。",
+  },
+  {
+    no: 3, id: "hinokon", name: "ヒノコン", types: ["ほのお"],
+    base: { hp: 44, atk: 58, def: 44, spa: 62, spd: 50, spe: 61 },
+    catchRate: 45, expYield: 65, evolve: { level: 16, to: "goemba" },
+    learnset: [[1, "taiatari"], [1, "nakigoe"], [6, "hinoko"], [12, "kiaitame"], [15, "kaenguruma"], [20, "seikenzuki"], [26, "hifist"], [32, "flameburner"]],
+    desc: "あたまの ひのこは きぶんで おおきさが かわる。ねているときは ちいさく ゆれる。",
+  },
+  {
+    no: 4, id: "goemba", name: "ゴエンバ", types: ["ほのお", "かくとう"],
+    base: { hp: 76, atk: 95, def: 67, spa: 88, spd: 66, spe: 88 },
+    catchRate: 45, expYield: 160,
+    learnset: [[1, "taiatari"], [1, "nakigoe"], [6, "hinoko"], [12, "kiaitame"], [16, "seikenzuki"], [20, "kaenguruma"], [27, "hifist"], [34, "flameburner"], [40, "bakuretsuken"]],
+    desc: "もえる こぶしで たたかう ねっけつかん。まいあさ たきに むかって シャドーボクシングする。",
+  },
+  {
+    no: 5, id: "shizumin", name: "シズミン", types: ["みず"],
+    base: { hp: 50, atk: 48, def: 60, spa: 60, spd: 58, spe: 44 },
+    catchRate: 45, expYield: 64, evolve: { level: 16, to: "taidarn" },
+    learnset: [[1, "taiatari"], [1, "nakigoe"], [6, "mizudeppo"], [11, "katakunaru"], [15, "bubblewave"], [21, "aquadash"], [28, "tidalwave"]],
+    desc: "あたまの みずたまは きんちょうすると おおきく ふくらむ。なみだもろい せいかく。",
+  },
+  {
+    no: 6, id: "taidarn", name: "タイダーン", types: ["みず"],
+    base: { hp: 85, atk: 75, def: 95, spa: 90, spd: 88, spe: 55 },
+    catchRate: 45, expYield: 158,
+    learnset: [[1, "taiatari"], [1, "nakigoe"], [6, "mizudeppo"], [15, "bubblewave"], [19, "aquadash"], [25, "zutsuki"], [32, "tidalwave"]],
+    desc: "せなかの こうらに たくわえた みずを たきのように ふきだして こうげきする。",
+  },
+  {
+    no: 7, id: "koronezu", name: "コロネズ", types: ["ノーマル"],
+    base: { hp: 38, atk: 50, def: 35, spa: 30, spd: 35, spe: 65 },
+    catchRate: 255, expYield: 45, evolve: { level: 12, to: "dotanezu" },
+    learnset: [[1, "taiatari"], [3, "nakigoe"], [7, "shippu"], [12, "zutsuki"], [17, "sharpclaw"], [22, "noshikakari"]],
+    desc: "ころころ ころがって いどうする ねずみ。ほっぺの ふくろに きのみを ためこむ。",
+  },
+  {
+    no: 8, id: "dotanezu", name: "ドタネズ", types: ["ノーマル"],
+    base: { hp: 68, atk: 82, def: 62, spa: 50, spd: 60, spe: 92 },
+    catchRate: 127, expYield: 120,
+    learnset: [[1, "taiatari"], [3, "nakigoe"], [7, "shippu"], [12, "zutsuki"], [17, "sharpclaw"], [22, "noshikakari"], [26, "otakebi"]],
+    desc: "ドタドタと はしりまわる おおねずみ。まえばは いわも かじって けずってしまう。",
+  },
+  {
+    no: 9, id: "pipitto", name: "ピピット", types: ["ノーマル", "ひこう"],
+    base: { hp: 40, atk: 45, def: 40, spa: 35, spd: 35, spe: 60 },
+    catchRate: 255, expYield: 50, evolve: { level: 14, to: "sorahane" },
+    learnset: [[1, "taiatari"], [4, "kazeokoshi"], [8, "shippu"], [13, "tsubasa"], [19, "sonicwing"]],
+    desc: "ピピッと なきながら そらを まう ことり。ひとなつっこく かたに とまってくる。",
+  },
+  {
+    no: 10, id: "sorahane", name: "ソラハネ", types: ["ノーマル", "ひこう"],
+    base: { hp: 70, atk: 80, def: 65, spa: 60, spd: 60, spe: 100 },
+    catchRate: 90, expYield: 140,
+    learnset: [[1, "taiatari"], [4, "kazeokoshi"], [8, "shippu"], [15, "tsubasa"], [21, "sonicwing"], [29, "skydive"]],
+    desc: "おおぞらの かりゅうど。きゅうこうかの スピードは トモシビちほう いちばんと いわれる。",
+  },
+  {
+    no: 11, id: "kemukemu", name: "ケムケム", types: ["むし"],
+    base: { hp: 45, atk: 30, def: 38, spa: 25, spd: 30, spe: 42 },
+    catchRate: 255, expYield: 40, evolve: { level: 10, to: "choumai" },
+    learnset: [[1, "taiatari"], [3, "itowohaku"], [7, "bugbite"]],
+    desc: "けむくじゃらの いもむし。てんてきに あうと けを ふくらませて おおきく みせる。",
+  },
+  {
+    no: 12, id: "choumai", name: "チョウマイ", types: ["むし", "ひこう"],
+    base: { hp: 60, atk: 45, def: 50, spa: 85, spd: 75, spe: 70 },
+    catchRate: 120, expYield: 130,
+    learnset: [[1, "taiatari"], [1, "itowohaku"], [10, "kazeokoshi"], [13, "nemurigona"], [17, "mushinohikari"], [22, "sonicwing"], [27, "shibiregona"]],
+    desc: "はねの もようは ひとつとして おなじものが ない。りんぷんには ねむりの こうかがある。",
+  },
+  {
+    no: 13, id: "biribo", name: "ビリボ", types: ["でんき"],
+    base: { hp: 40, atk: 45, def: 40, spa: 65, spd: 50, spe: 70 },
+    catchRate: 190, expYield: 60, evolve: { level: 22, to: "raigoron" },
+    learnset: [[1, "taiatari"], [1, "nakigoe"], [5, "denkishock"], [11, "mahidenpa"], [16, "shippu"], [20, "sparktackle"], [26, "lightning"]],
+    desc: "まんまるボディに でんきを ためる。おどろくと バチッと ほうでんして じぶんも おどろく。",
+  },
+  {
+    no: 14, id: "raigoron", name: "ライゴロン", types: ["でんき"],
+    base: { hp: 70, atk: 78, def: 62, spa: 100, spd: 75, spe: 105 },
+    catchRate: 75, expYield: 155,
+    learnset: [[1, "taiatari"], [1, "nakigoe"], [5, "denkishock"], [11, "mahidenpa"], [22, "sparktackle"], [30, "lightning"], [35, "otakebi"]],
+    desc: "らいうんを まとう いかずちの けもの。ほえると あたり いちめんに かみなりが おちる。",
+  },
+  {
+    no: 15, id: "gorotan", name: "ゴロタン", types: ["いわ"],
+    base: { hp: 55, atk: 70, def: 90, spa: 30, spd: 40, spe: 25 },
+    catchRate: 190, expYield: 70, evolve: { level: 20, to: "gansekioh" },
+    learnset: [[1, "taiatari"], [1, "katakunaru"], [7, "iwaotoshi"], [13, "dorokake"], [18, "zutsuki"], [24, "mudshot"], [30, "gansekinadare"]],
+    desc: "ごろんと ころがる いわの こども。やまみちで つまずいた いしが ゴロタンの ことも。",
+  },
+  {
+    no: 16, id: "gansekioh", name: "ガンセキオー", types: ["いわ", "じめん"],
+    base: { hp: 85, atk: 105, def: 125, spa: 45, spd: 60, spe: 35 },
+    catchRate: 60, expYield: 165,
+    learnset: [[1, "taiatari"], [1, "katakunaru"], [7, "iwaotoshi"], [13, "dorokake"], [18, "zutsuki"], [24, "mudshot"], [30, "gansekinadare"], [34, "earthcrash"]],
+    desc: "がんばんの よろいを まとう がんくつの おう。ひゃくねん いじょう いきると いわれる。",
+  },
+  {
+    no: 17, id: "nemuriro", name: "ネムリロ", types: ["エスパー"],
+    base: { hp: 60, atk: 35, def: 45, spa: 65, spd: 60, spe: 30 },
+    catchRate: 150, expYield: 65, evolve: { level: 24, to: "yumemira" },
+    learnset: [[1, "nenriki"], [5, "nakigoe"], [10, "nemurihadou"], [16, "meisou"], [26, "psychokinesis"], [30, "healinglight"]],
+    desc: "いちにちの ほとんどを ゆめのなかで すごす。ねごとで あしたの てんきを あてる。",
+  },
+  {
+    no: 18, id: "yumemira", name: "ユメミラ", types: ["エスパー"],
+    base: { hp: 85, atk: 50, def: 65, spa: 110, spd: 95, spe: 65 },
+    catchRate: 60, expYield: 160,
+    learnset: [[1, "nenriki"], [10, "nemurihadou"], [18, "meisou"], [24, "healinglight"], [30, "psychokinesis"]],
+    desc: "ひとの ゆめを のぞき、いい ゆめを みせてくれる。ひたいの たまは ほしぞらの いろ。",
+  },
+  {
+    no: 19, id: "hotabi", name: "ホタビ", types: ["ゴースト", "ほのお"],
+    base: { hp: 45, atk: 35, def: 45, spa: 70, spd: 55, spe: 60 },
+    catchRate: 150, expYield: 70, evolve: { level: 26, to: "onibirasu" },
+    learnset: [[1, "shadowdash"], [1, "hinoko"], [9, "noroibi"], [15, "onibi"], [22, "shadowsphere"]],
+    desc: "よみちに ふわふわ うかぶ あおい ひのたま。ついていくと めいろに まよいこむという。",
+  },
+  {
+    no: 20, id: "onibirasu", name: "オニビラス", types: ["ゴースト", "ほのお"],
+    base: { hp: 70, atk: 55, def: 65, spa: 105, spd: 85, spe: 90 },
+    catchRate: 60, expYield: 160,
+    learnset: [[1, "shadowdash"], [1, "hinoko"], [9, "noroibi"], [15, "onibi"], [26, "shadowsphere"], [33, "flameburner"]],
+    desc: "むすうの ひとだまを したがえる おにびの ぬし。ふるい とうだいに すみつくことがある。",
+  },
+  {
+    no: 21, id: "kobusshi", name: "コブッシ", types: ["かくとう"],
+    base: { hp: 55, atk: 72, def: 50, spa: 30, spd: 40, spe: 55 },
+    catchRate: 150, expYield: 70, evolve: { level: 25, to: "goukender" },
+    learnset: [[1, "seikenzuki"], [1, "kiaitame"], [8, "mawashigeri"], [14, "toukon"], [20, "zutsuki"]],
+    desc: "まいにち きの みきに パンチして しゅぎょうする。こぶしの タコは つよさの あかし。",
+  },
+  {
+    no: 22, id: "goukender", name: "ゴウケンダー", types: ["かくとう"],
+    base: { hp: 85, atk: 115, def: 75, spa: 45, spd: 65, spe: 80 },
+    catchRate: 60, expYield: 165,
+    learnset: [[1, "seikenzuki"], [8, "mawashigeri"], [16, "toukon"], [24, "hifist"], [31, "bakuretsuken"]],
+    desc: "ひとつの こぶしに にゅうこんする けんの たつじん。いわを いちげきで くだく。",
+  },
+  {
+    no: 23, id: "dokudama", name: "ドクダマ", types: ["どく"],
+    base: { hp: 65, atk: 55, def: 60, spa: 65, spd: 65, spe: 40 },
+    catchRate: 160, expYield: 90,
+    learnset: [[1, "dokubari"], [6, "katakunaru"], [12, "dokunokona"], [20, "hedoro"], [28, "noshikakari"]],
+    desc: "どうくつの しめった ばしょに すむ。おこると どくの ガスを ぷすぷす ふきだす。",
+  },
+  {
+    no: 24, id: "mogurai", name: "モグライ", types: ["じめん"],
+    base: { hp: 50, atk: 75, def: 55, spa: 35, spd: 45, spe: 85 },
+    catchRate: 160, expYield: 95,
+    learnset: [[1, "taiatari"], [1, "dorokake"], [8, "mudshot"], [15, "sharpclaw"], [23, "earthcrash"]],
+    desc: "じめんの したを ものすごい はやさで ほりすすむ。つめは ダイヤより かたい。",
+  },
+  {
+    no: 25, id: "tatsume", name: "タツメ", types: ["ドラゴン"],
+    base: { hp: 45, atk: 60, def: 45, spa: 55, spd: 50, spe: 55 },
+    catchRate: 45, expYield: 75, evolve: { level: 32, to: "ryugaoh" },
+    learnset: [[1, "taiatari"], [1, "nakigoe"], [10, "dragobreath"], [18, "ryumai"], [25, "ryunotsume"]],
+    desc: "でんせつの りゅうの こども と いわれる。めったに ひとまえに すがたを あらわさない。",
+  },
+  {
+    no: 26, id: "ryugaoh", name: "リュウガオー", types: ["ドラゴン"],
+    base: { hp: 88, atk: 112, def: 85, spa: 95, spd: 80, spe: 95 },
+    catchRate: 45, expYield: 200,
+    learnset: [[1, "taiatari"], [1, "nakigoe"], [10, "dragobreath"], [20, "ryumai"], [28, "ryunotsume"], [38, "dragonburst"]],
+    desc: "きばと ツメで あらしを きりさく りゅうの おう。やまおくの みずうみを すみかとする。",
+  },
+  {
+    no: 27, id: "tengenryu", name: "テンゲンリュウ", types: ["ドラゴン", "エスパー"],
+    base: { hp: 100, atk: 100, def: 90, spa: 130, spd: 100, spe: 95 },
+    catchRate: 3, expYield: 255,
+    learnset: [[1, "dragobreath"], [1, "nenriki"], [35, "psychokinesis"], [40, "ryunotsume"], [45, "meisou"], [50, "dragonburst"]],
+    desc: "トモシビちほうの そらを まもると つたえられる でんせつの りゅう。ほしの ひかりを たべる。",
+  },
+];
+
+const BY_ID = Object.fromEntries(DEX.map((s) => [s.id, s]));
+
+export function species(id) {
+  const s = BY_ID[id];
+  if (!s) throw new Error("unknown species: " + id);
+  return s;
+}
