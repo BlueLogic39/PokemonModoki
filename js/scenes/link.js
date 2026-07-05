@@ -167,8 +167,8 @@ export class LinkScene {
 
       this.setStatus("あいてが えらんでいます…");
       const theirsMsg = await Promise.race([
-        this.room.waitFor("trade_offer", WAIT_LONG),
-        this.room.waitFor("trade_cancel", WAIT_LONG).then(() => null),
+        this.room.waitFor("trade_offer", WAIT_LONG).catch(() => null),
+        this.room.waitFor("trade_cancel", WAIT_LONG).then(() => null).catch(() => null),
       ]);
       if (!theirsMsg) { await ui.say("あいてが こうかんを やめた。"); return; }
       this.offerTheirs = theirsMsg.mon;
@@ -181,8 +181,8 @@ export class LinkScene {
 
       this.setStatus("あいての へんじを まっています…");
       const confirmed = await Promise.race([
-        this.room.waitFor("trade_confirm", WAIT_LONG).then(() => true),
-        this.room.waitFor("trade_cancel", WAIT_LONG).then(() => false),
+        this.room.waitFor("trade_confirm", WAIT_LONG).then(() => true).catch(() => false),
+        this.room.waitFor("trade_cancel", WAIT_LONG).then(() => false).catch(() => false),
       ]);
       if (!confirmed) { await ui.say("あいてが キャンセルした。"); continue; }
 
@@ -203,8 +203,8 @@ export class LinkScene {
       this.room.send(again ? "trade_again" : "trade_end", {});
       this.setStatus("あいての へんじを まっています…");
       const peerAgain = await Promise.race([
-        this.room.waitFor("trade_again", WAIT_LONG).then(() => true),
-        this.room.waitFor("trade_end", WAIT_LONG).then(() => false),
+        this.room.waitFor("trade_again", WAIT_LONG).then(() => true).catch(() => false),
+        this.room.waitFor("trade_end", WAIT_LONG).then(() => false).catch(() => false),
       ]);
       if (!again || !peerAgain) { await ui.say("こうかんを おわった。 またね!"); return; }
     }
@@ -223,8 +223,8 @@ export class LinkScene {
     this.room.send("party", { party: myPartyData, name: G.player.name });
     this.setStatus("あいての チームを まっています…");
     const theirs = await Promise.race([
-      this.room.waitFor("party", WAIT_LONG),
-      this.room.waitFor("battle_abort", WAIT_LONG).then(() => null),
+      this.room.waitFor("party", WAIT_LONG).catch(() => null),
+      this.room.waitFor("battle_abort", WAIT_LONG).then(() => null).catch(() => null),
     ]);
     if (!theirs) { await ui.say("あいてが たいせんを ちゅうしした。"); return; }
 

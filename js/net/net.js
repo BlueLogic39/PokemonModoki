@@ -25,6 +25,7 @@ export class Room {
     this.selfId = selfId;
     this.handlers = new Map(); // type -> [resolve,...] (waitFor用)
     this.listeners = new Set();
+    this.inbox = new Map();     // type -> [data,...] 待ち受け前に届いたメッセージを貯める
     this.closed = false;
   }
 
@@ -77,7 +78,13 @@ export class Room {
       waiters.shift()(payload.data);
       return;
     }
-    for (const fn of this.listeners) fn(payload.type, payload.data);
+    if (this.listeners.size) {
+      for (const fn of this.listeners) fn(payload.type, payload.data);
+      return;
+    }
+    // まだ誰も受け取っていない → バッファに貯めて、あとで waitFor が来たら渡す
+    if (!this.inbox.has(payload.type)) this.inbox.set(payload.type, []);
+    this.inbox.get(payload.type).push(payload.data);
   }
 
   onAny(fn) { this.listeners.add(fn); }
@@ -89,6 +96,11 @@ export class Room {
 
   // 指定タイプのメッセージを1つ待つ
   waitFor(type, timeoutMs = 0) {
+    // すでにバッファに届いていれば即座に返す (取りこぼし防止)
+    const buffered = this.inbox.get(type);
+    if (buffered && buffered.length) {
+      return Promise.resolve(buffered.shift());
+    }
     return new Promise((resolve, reject) => {
       if (!this.handlers.has(type)) this.handlers.set(type, []);
       let timer = null;
