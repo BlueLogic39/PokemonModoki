@@ -81,43 +81,128 @@ function renderPixelRows(rows, pal, scale) {
   return cv;
 }
 
-export function monSpriteCanvas(speciesId, scale = 1) {
-  const key = "mon:" + speciesId + ":" + scale;
+// ---------- 高解像度化 (Scale2x + 自動陰影) ----------
+// 16x16の元絵を輪郭補間で拡大し、上端ハイライト・下端シャドウを足して
+// モンスター64x64 / キャラ32x32 の細かいドットに仕上げる。
+
+// Scale2x (EPX): 斜め線を滑らかに補間しながら2倍に拡大する定番アルゴリズム
+function scale2x(src) {
+  const w = src.width, h = src.height;
+  const sd = src.getContext("2d").getImageData(0, 0, w, h);
+  const s32 = new Uint32Array(sd.data.buffer);
+  const out = document.createElement("canvas");
+  out.width = w * 2; out.height = h * 2;
+  const octx = out.getContext("2d");
+  const od = octx.createImageData(w * 2, h * 2);
+  const o32 = new Uint32Array(od.data.buffer);
+  const get = (x, y) => (x < 0 || y < 0 || x >= w || y >= h) ? 0 : s32[y * w + x];
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      const P = get(x, y), A = get(x, y - 1), B = get(x + 1, y), C = get(x - 1, y), D = get(x, y + 1);
+      let e0 = P, e1 = P, e2 = P, e3 = P;
+      if (C === A && C !== D && A !== B) e0 = A;
+      if (A === B && A !== C && B !== D) e1 = B;
+      if (D === C && D !== B && C !== A) e2 = C;
+      if (B === D && B !== A && D !== C) e3 = B;
+      const oy = y * 2 * (w * 2) + x * 2;
+      o32[oy] = e0; o32[oy + 1] = e1;
+      o32[oy + w * 2] = e2; o32[oy + w * 2 + 1] = e3;
+    }
+  }
+  octx.putImageData(od, 0, 0);
+  return out;
+}
+
+// 自動陰影: 輪郭/透明に接する上側を明るく、下側を暗くして立体感を出す
+function autoShade(cv, thickness = 1) {
+  const c = cv.getContext("2d");
+  const img = c.getImageData(0, 0, cv.width, cv.height);
+  const d = img.data;
+  const w = cv.width, h = cv.height;
+  const alphaAt = (x, y) => (x < 0 || y < 0 || x >= w || y >= h) ? 0 : d[(y * w + x) * 4 + 3];
+  const isEdge = (x, y) => { // 透明 or 暗い輪郭
+    if (alphaAt(x, y) < 40) return true;
+    const i = (y * w + x) * 4;
+    return d[i] * 0.3 + d[i + 1] * 0.6 + d[i + 2] * 0.1 < 70;
+  };
+  const lights = [], shades = [];
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      const i = (y * w + x) * 4;
+      if (d[i + 3] < 40) continue;
+      if (d[i] * 0.3 + d[i + 1] * 0.6 + d[i + 2] * 0.1 < 70) continue; // 輪郭自体は触らない
+      let top = false, bottom = false;
+      for (let k = 1; k <= thickness; k++) { if (isEdge(x, y - k)) { top = true; break; } }
+      if (!top) for (let k = 1; k <= thickness; k++) { if (isEdge(x, y + k)) { bottom = true; break; } }
+      if (top) lights.push(i);
+      else if (bottom) shades.push(i);
+    }
+  }
+  for (const i of lights) {
+    d[i] = Math.min(255, d[i] * 1.15 + 18);
+    d[i + 1] = Math.min(255, d[i + 1] * 1.15 + 18);
+    d[i + 2] = Math.min(255, d[i + 2] * 1.15 + 18);
+  }
+  for (const i of shades) {
+    d[i] = d[i] * 0.78;
+    d[i + 1] = d[i + 1] * 0.78;
+    d[i + 2] = d[i + 2] * 0.78;
+  }
+  c.putImageData(img, 0, 0);
+  return cv;
+}
+
+function enhance(base, times) { // times: 2 → 32x32 / 4 → 64x64
+  let cv = scale2x(base);
+  if (times === 4) cv = scale2x(cv);
+  return autoShade(cv, times === 4 ? 2 : 1);
+}
+
+// モンスター: 64x64 の高精細スプライト
+export function monSpriteCanvas(speciesId) {
+  const key = "mon64:" + speciesId;
   if (!spriteCache.has(key)) {
     const def = MON_SPRITES[speciesId];
     if (!def) throw new Error("no sprite: " + speciesId);
-    spriteCache.set(key, renderPixelRows(def.rows, def.pal, scale));
+    spriteCache.set(key, enhance(renderPixelRows(def.rows, def.pal, 1), 4));
   }
   return spriteCache.get(key);
 }
+// scale は従来どおり「16px単位」: 描画サイズ 16*scale に 64x64 を押し込む
 export function drawMonSprite(ctx, speciesId, x, y, scale = 1) {
-  ctx.drawImage(monSpriteCanvas(speciesId, scale), Math.round(x), Math.round(y));
+  ctx.drawImage(monSpriteCanvas(speciesId), Math.round(x), Math.round(y), 16 * scale, 16 * scale);
 }
-// シルエット (図鑑未登録・登場演出用)
-export function monSilhouette(speciesId, scale = 1, color = "#283048") {
-  const key = "sil:" + speciesId + ":" + scale + color;
+// シルエット (図鑑未登録用)
+export function monSilhouette(speciesId, color = "#283048") {
+  const key = "sil64:" + speciesId + color;
   if (!spriteCache.has(key)) {
     const def = MON_SPRITES[speciesId];
     const pal = {};
     for (const k of Object.keys(def.pal)) pal[k] = color;
-    spriteCache.set(key, renderPixelRows(def.rows, pal, scale));
+    let cv = scale2x(scale2x(renderPixelRows(def.rows, pal, 1)));
+    spriteCache.set(key, cv);
   }
   return spriteCache.get(key);
 }
+export function drawMonSilhouette(ctx, speciesId, x, y, scale = 1, color = "#283048") {
+  ctx.drawImage(monSilhouette(speciesId, color), Math.round(x), Math.round(y), 16 * scale, 16 * scale);
+}
 
+// キャラクター: 32x32 の高精細スプライト
 export function charSpriteCanvas(palName, dir) {
-  const key = "chr:" + palName + ":" + dir;
+  const key = "chr32:" + palName + ":" + dir;
   if (!spriteCache.has(key)) {
     const pal = CHAR_PALS[palName] || CHAR_PALS.boy;
     let rows, flip = false;
     if (dir === "down") rows = CHAR_BASE.down;
     else if (dir === "up") rows = CHAR_BASE.up;
     else { rows = CHAR_BASE.side; flip = dir === "right"; }
-    let cv = renderPixelRows(rows, pal, 1);
+    let cv = enhance(renderPixelRows(rows, pal, 1), 2);
     if (flip) {
       const f = document.createElement("canvas");
       f.width = cv.width; f.height = cv.height;
       const fc = f.getContext("2d");
+      fc.imageSmoothingEnabled = false;
       fc.translate(cv.width, 0); fc.scale(-1, 1);
       fc.drawImage(cv, 0, 0);
       cv = f;
@@ -127,7 +212,7 @@ export function charSpriteCanvas(palName, dir) {
   return spriteCache.get(key);
 }
 export function drawChar(ctx, palName, dir, x, y, bob = 0) {
-  ctx.drawImage(charSpriteCanvas(palName, dir), Math.round(x), Math.round(y - 2 - bob));
+  ctx.drawImage(charSpriteCanvas(palName, dir), Math.round(x), Math.round(y - 2 - bob), 16, 16);
 }
 
 // ---------- ボールアイコン ----------

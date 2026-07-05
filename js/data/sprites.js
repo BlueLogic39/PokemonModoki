@@ -633,6 +633,7 @@ export const CHAR_BASE = {
 // キャラごとのパレット
 export const CHAR_PALS = {
   player:    { k: "#25201c", h: "#d94f2a", s: "#f5cfa0", c: "#3f68c9", p: "#4a4a5a", e: "#222222" },
+  player_girl: { k: "#25201c", h: "#a3552a", s: "#f5cfa0", c: "#e8607a", p: "#3a4a6a", e: "#222222" },
   rival:     { k: "#1c2025", h: "#3a5fc0", s: "#f5cfa0", c: "#e0e0e8", p: "#333340", e: "#222222" },
   professor: { k: "#25201c", h: "#8a7a5a", s: "#f5cfa0", c: "#f0f0f0", p: "#6a5a3a", e: "#222222" },
   mom:       { k: "#25201c", h: "#a35c2a", s: "#f5cfa0", c: "#e88aa0", p: "#7a4a5a", e: "#222222" },

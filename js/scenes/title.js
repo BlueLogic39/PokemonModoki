@@ -1,5 +1,5 @@
 // タイトル画面
-import { G, newPlayer, replaceScene } from "../game.js";
+import { G, newPlayer, replaceScene, pushScene } from "../game.js";
 import { ui } from "../engine/ui.js";
 import { audio } from "../engine/audio.js";
 import {
@@ -7,8 +7,10 @@ import {
 } from "../engine/render.js";
 import { hasSave, loadGame } from "../core/save.js";
 import { OverworldScene } from "./overworld.js";
+import { NameInputScene } from "./name_input.js";
 
-const NAMES = ["ユウ", "ハルカ", "レン", "ミオ", "ソウタ", "ヒカリ"];
+const BOY_NAMES = ["ユウ", "ソウタ", "レン", "ハルト", "ダイチ"];
+const GIRL_NAMES = ["ハルカ", "ミオ", "ヒカリ", "サクラ", "コトネ"];
 
 export class TitleScene {
   constructor() { this.started = false; }
@@ -34,9 +36,26 @@ export class TitleScene {
           if (!ok) continue;
         }
         await ui.say("カエデはかせ『やあ! モンスターの せかいへ ようこそ!』");
-        await ui.say("カエデはかせ『まずは きみの なまえを おしえてくれるかな?』");
-        const ni = await ui.ask(NAMES, { canCancel: false });
-        G.player = newPlayer(NAMES[ni]);
+        // 性別をえらぶ
+        await ui.say("カエデはかせ『きみは おとこのこ? それとも おんなのこ?』");
+        const gi = await ui.ask(["おとこのこ", "おんなのこ"], { canCancel: false });
+        const gender = gi === 1 ? "girl" : "boy";
+        // なまえをえらぶ (性別で候補が変わる + じぶんできめる)
+        let name = null;
+        while (!name) {
+          await ui.say("カエデはかせ『きみの なまえを おしえてくれるかな?』");
+          const list = (gender === "girl" ? GIRL_NAMES : BOY_NAMES).concat(["じぶんで きめる"]);
+          const ni = await ui.ask(list, { canCancel: false });
+          let candidate;
+          if (ni === list.length - 1) {
+            candidate = await new Promise((resolve) => pushScene(new NameInputScene(resolve)));
+            if (!candidate) continue; // キャンセルされたら選び直し
+          } else {
+            candidate = list[ni];
+          }
+          if (await ui.confirm(`なまえは 「${candidate}」で いいかな?`)) name = candidate;
+        }
+        G.player = newPlayer(name, gender);
         await ui.say(`カエデはかせ『${G.player.name}! いい なまえだ。』`);
         await ui.say("カエデはかせ『じゅんびが できたら いえを でて わたしの けんきゅうじょへ おいで! まっているよ!』");
         break;

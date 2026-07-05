@@ -99,13 +99,30 @@ export class BattleScene {
     const events = this.battle.turn(action, foeAction);
     this.o.afterTurn?.(events);
     await this.playEvents(events);
-    // ひんし交代
-    while (!this.finished && events.some((e) => e.t === "mustSwitch")) {
+
+    // 自分がひんし → 次に出すモンスターを選ぶ
+    const iFainted = events.some((e) => e.t === "mustSwitch");
+    if (!this.finished && iFainted) {
       const idx = await this.choosePartyMon("つぎの モンスターを えらんでください", false);
       const swEvents = this.battle.forceSwitch(idx);
       this.o.afterTurn?.(swEvents);
       await this.playEvents(swEvents);
-      break;
+    }
+
+    // 相手が次のモンスターを繰り出す (ストーリーのトレーナー戦のみ)
+    const willSend = events.find((e) => e.t === "foeWillSend");
+    if (!this.finished && willSend) {
+      let switchIdx = null;
+      // 相打ちで自分もひんしだった場合は、直前に選んだばかりなので確認しない
+      if (!iFainted) {
+        await this.say(`${this.o.foeTrainer?.name ?? "あいて"}は ${willSend.name}を くりだそうとしている!`, false);
+        if (await ui.confirm("モンスターを いれかえますか?")) {
+          const idx = await this.choosePartyMon("だれに いれかえる?", true);
+          if (idx !== -1) switchIdx = idx;
+        }
+      }
+      const contEvents = this.battle.continueAfterFoeFaint(switchIdx);
+      await this.playEvents(contEvents);
     }
   }
 
@@ -210,7 +227,9 @@ export class BattleScene {
         const active = (this.mode === "guest" ? i === (this.guestActive ?? 0) : this.battle.me.active === i) ? "▷" : " ";
         return `${active}${m.name} Lv${m.level} ${m.curHp}/${statsOf(m).hp} ${st}`;
       });
+      const held = prompt ? ui.say(prompt) : null; // メニューの下に説明を表示しておく
       const idx = await ui.ask(labels, { canCancel });
+      if (held) { ui.dismissTopDialog(); await held; }
       if (idx === -1) return -1;
       const mon = party[idx];
       const isActive = this.mode === "guest" ? idx === (this.guestActive ?? 0) : this.battle.me.active === idx;
@@ -297,6 +316,7 @@ export class BattleScene {
           break;
         }
         case "mustSwitch":
+        case "foeWillSend": // ターン処理後にシーン側で対応する
           break;
         case "end": {
           await this.handleEnd(e.result, flip);

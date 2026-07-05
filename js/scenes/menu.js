@@ -4,9 +4,11 @@ import { input } from "../engine/input.js";
 import { audio } from "../engine/audio.js";
 import { ui } from "../engine/ui.js";
 import {
-  SCREEN_W, SCREEN_H, drawText, drawWindow, drawHpBar, drawMonSprite, monSilhouette,
+  SCREEN_W, SCREEN_H, drawText, drawWindow, drawHpBar, drawMonSprite, drawMonSilhouette,
   drawDarkPanel, drawTextShadow, drawBallIcon,
 } from "../engine/render.js";
+import { SettingsScene } from "./settings.js";
+import { TrainerCardScene } from "./trainer_card.js";
 import { DEX, species } from "../data/dex.js";
 import { moveData } from "../data/moves.js";
 import { itemData } from "../data/items.js";
@@ -27,27 +29,25 @@ export class MenuScene {
   async run() {
     while (!this.closed) {
       const i = await ui.ask(
-        ["モンスター", "バッグ", "ずかん", "つうしん", "レポート", "バッジ", "とじる"],
+        ["モンスター", "バッグ", "ずかん", G.player.name, "つうしん", "レポート", "せってい", "とじる"],
         { x: SCREEN_W - 76, y: 6 },
       );
-      if (i === -1 || i === 6) break;
+      if (i === -1 || i === 7) break;
       if (i === 0) await runSub(PartyScene);
       else if (i === 1) await runSub(BagScene);
       else if (i === 2) await runSub(DexScene);
-      else if (i === 3) {
+      else if (i === 3) await runSub(TrainerCardScene); // トレーナーカード
+      else if (i === 4) {
         popScene(); // メニューを閉じてから通信ルームへ
         pushScene(new LinkScene());
         return;
       }
-      else if (i === 4) {
+      else if (i === 5) {
         const ok = saveGame(G.player);
         audio.sfx(ok ? "heal" : "bump");
         await ui.say(ok ? "レポートに しっかり かきのこした! (セーブ かんりょう)" : "セーブに しっぱいした…");
       }
-      else if (i === 5) {
-        if (G.player.badges.length === 0) await ui.say("バッジは まだ もっていない。");
-        else await ui.say("もっている バッジ:\n" + G.player.badges.join("、"));
-      }
+      else if (i === 6) await runSub(SettingsScene);
     }
     popScene();
   }
@@ -302,7 +302,7 @@ export class DexScene {
       }
       drawText(ctx, "Aで せつめい", 152, 138, "#808080");
     } else {
-      ctx.drawImage(monSilhouette(sp.id, 3), 163, 26);
+      drawMonSilhouette(ctx, sp.id, 163, 26, 3);
       drawText(ctx, "?????", 152, 78, "#a0a0a0");
     }
   }

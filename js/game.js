@@ -11,9 +11,10 @@ export const G = {
   time: 0,
 };
 
-export function newPlayer(name) {
+export function newPlayer(name, gender = "boy") {
   return {
     name,
+    gender, // "boy" | "girl"
     tid: String(10000 + Math.floor(Math.random() * 90000)),
     map: "player_home",
     x: 4, y: 5, dir: "down",

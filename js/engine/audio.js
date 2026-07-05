@@ -1,11 +1,23 @@
 // WebAudio によるレトロ風サウンド (効果音 + 簡易BGMシーケンサ)
+const AUDIO_SETTINGS_KEY = "tomoshibi_audio_v1";
+
 class AudioSys {
   constructor() {
     this.ctx = null;
     this.musicTimer = null;
     this.currentSong = null;
     this.muted = false;
+    this.masterGain = null;
     this.musicGain = null;
+    this.sfxGain = null;
+    // 音量設定 (0〜10)。localStorage に保存され次回起動時も引き継がれる。
+    this.settings = { master: 10, bgm: 10, se: 10 };
+    try {
+      const saved = JSON.parse(localStorage.getItem(AUDIO_SETTINGS_KEY));
+      if (saved) for (const k of ["master", "bgm", "se"]) {
+        if (typeof saved[k] === "number") this.settings[k] = Math.max(0, Math.min(10, saved[k]));
+      }
+    } catch { /* 設定なし */ }
     window.addEventListener("keydown", (e) => {
       if (e.key === "m" || e.key === "M") this.toggleMute();
     });
@@ -13,15 +25,30 @@ class AudioSys {
   ensure() {
     if (!this.ctx) {
       this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+      this.masterGain = this.ctx.createGain();
+      this.masterGain.connect(this.ctx.destination);
       this.musicGain = this.ctx.createGain();
-      this.musicGain.gain.value = 0.12;
-      this.musicGain.connect(this.ctx.destination);
+      this.musicGain.connect(this.masterGain);
+      this.sfxGain = this.ctx.createGain();
+      this.sfxGain.connect(this.masterGain);
+      this.applyVolumes();
     }
     if (this.ctx.state === "suspended") this.ctx.resume();
   }
+  applyVolumes() {
+    if (!this.ctx) return;
+    this.masterGain.gain.value = this.muted ? 0 : this.settings.master / 10;
+    this.musicGain.gain.value = 0.12 * (this.settings.bgm / 10);
+    this.sfxGain.gain.value = this.settings.se / 10;
+  }
+  setVolume(kind, value) {
+    this.settings[kind] = Math.max(0, Math.min(10, value));
+    try { localStorage.setItem(AUDIO_SETTINGS_KEY, JSON.stringify(this.settings)); } catch { /* 保存失敗は無視 */ }
+    this.applyVolumes();
+  }
   toggleMute() {
     this.muted = !this.muted;
-    if (this.musicGain) this.musicGain.gain.value = this.muted ? 0 : 0.12;
+    this.applyVolumes();
   }
   tone(freq, dur = 0.08, type = "square", vol = 0.15, delay = 0, slide = 0) {
     if (this.muted) return;
@@ -35,7 +62,7 @@ class AudioSys {
       if (slide) osc.frequency.linearRampToValueAtTime(Math.max(20, freq + slide), t0 + dur);
       g.gain.setValueAtTime(vol, t0);
       g.gain.exponentialRampToValueAtTime(0.001, t0 + dur);
-      osc.connect(g); g.connect(this.ctx.destination);
+      osc.connect(g); g.connect(this.sfxGain);
       osc.start(t0); osc.stop(t0 + dur + 0.02);
     } catch { /* オーディオ未許可時は無音 */ }
   }

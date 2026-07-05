@@ -425,8 +425,14 @@ export class Battle {
       this.giveExp(foeMon, ev);
       if (this.foe.aliveCount() === 0) {
         this.result = "win";
+      } else if (this.kind === "trainer") {
+        // ストーリー: すぐには繰り出さず「繰り出そうとしている」状態にする
+        // (シーン側が入れ替え確認をしてから continueAfterFoeFaint を呼ぶ)
+        const next = this.foe.party.findIndex((m) => !isFainted(m));
+        this.pendingFoeSend = next;
+        ev.push({ t: "foeWillSend", monIndex: next, name: this.foe.party[next].name });
       } else {
-        // 次のモンスターを繰り出す (トレーナー)
+        // 通信対戦: 勝ち抜き式で自動的に繰り出す
         const next = this.foe.party.findIndex((m) => !isFainted(m));
         this.foe.active = next;
         this.foe.resetVolatile();
@@ -453,6 +459,29 @@ export class Battle {
         ev.push({ t: "mustSwitch" }); // シーン側が交代UIを出す
       }
     }
+  }
+
+  // 相手のひんし後の続き (ストーリーのみ)
+  // switchIdx を渡すと相手が次を繰り出す前にこちらも無償で入れ替える
+  continueAfterFoeFaint(switchIdx = null) {
+    const ev = [];
+    if (switchIdx !== null && switchIdx !== this.me.active && !isFainted(this.me.party[switchIdx])) {
+      ev.push({ t: "msg", text: `もどれ! ${this.me.mon().name}!` });
+      this.me.active = switchIdx;
+      this.me.resetVolatile();
+      ev.push({ t: "switch", side: "me", monIndex: switchIdx, summary: summaryOf(this.me.mon()) });
+      ev.push({ t: "msg", text: `いけっ! ${this.me.mon().name}!` });
+    }
+    const next = this.pendingFoeSend;
+    this.pendingFoeSend = null;
+    if (next != null && next >= 0 && !isFainted(this.foe.party[next])) {
+      this.foe.active = next;
+      this.foe.resetVolatile();
+      this.participants = new Set([this.me.mon()?.uid]);
+      ev.push({ t: "switch", side: "foe", monIndex: next, summary: summaryOf(this.foe.mon()) });
+      ev.push({ t: "msg", text: `${this.trainerName ?? "あいて"}は ${this.foe.mon().name}を くりだした!` });
+    }
+    return ev;
   }
 
   // シーンからの交代 (ひんし後・ターン消費なし)

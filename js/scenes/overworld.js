@@ -468,7 +468,7 @@ export class OverworldScene {
       const sy = a.y * TILE - camY;
       if (a.player) {
         const bob = this.moving && Math.floor(this.prog * 4) % 2 === 0 ? 1 : 0;
-        drawChar(ctx, "player", p.dir, sx, sy, bob);
+        drawChar(ctx, p.gender === "girl" ? "player_girl" : "player", p.dir, sx, sy, bob);
       } else if (a.npc.mon) {
         drawMonSprite(ctx, a.npc.mon, sx, sy - 2, 1);
       } else {
