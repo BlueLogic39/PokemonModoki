@@ -65,10 +65,19 @@ function loop(ts) {
   requestAnimationFrame(loop);
 }
 
+// 内部解像度の拡大率。文字を高精細に描くためのスーパーサンプリング。
+// ドット絵は imageSmoothingEnabled=false のままなので今まで通りカクカクを保つ。
+export const SUPERSAMPLE = 4;
+
 export function startGame(canvas, firstScene) {
   G.canvas = canvas;
-  G.ctx = canvas.getContext("2d");
-  G.ctx.imageSmoothingEnabled = false;
+  // バッキングストアを SS 倍にし、座標系は 240x160 のまま使えるよう scale する
+  canvas.width = SCREEN_W * SUPERSAMPLE;
+  canvas.height = SCREEN_H * SUPERSAMPLE;
+  const ctx = canvas.getContext("2d");
+  ctx.setTransform(SUPERSAMPLE, 0, 0, SUPERSAMPLE, 0, 0);
+  ctx.imageSmoothingEnabled = false;
+  G.ctx = ctx;
   if (typeof window !== "undefined") window.__G = G; // デバッグ用
   pushScene(firstScene);
   requestAnimationFrame((ts) => { last = ts; loop(ts); });
