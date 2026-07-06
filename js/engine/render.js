@@ -60,16 +60,18 @@ export function drawHpBar(ctx, x, y, w, ratio) {
 // ---------- スプライト ----------
 const spriteCache = new Map();
 
+// rows.length が元絵のサイズ (16 or 32)。各行は「半分の幅(ミラー)」か「全幅」。
 function renderPixelRows(rows, pal, scale) {
+  const size = rows.length; // 16x16 または 32x32
   const cv = document.createElement("canvas");
-  cv.width = 16 * scale; cv.height = 16 * scale;
+  cv.width = size * scale; cv.height = size * scale;
   const c = cv.getContext("2d");
-  for (let ry = 0; ry < rows.length && ry < 16; ry++) {
-    const row = rows[ry];
+  for (let ry = 0; ry < size; ry++) {
+    const row = rows[ry] || "";
     let full;
-    if (row.length === 8) full = row + row.split("").reverse().join("");
+    if (row.length === size / 2) full = row + row.split("").reverse().join("");
     else full = row;
-    for (let rx = 0; rx < 16; rx++) {
+    for (let rx = 0; rx < size; rx++) {
       const ch = full[rx];
       if (!ch || ch === ".") continue;
       const col = pal[ch];
@@ -152,19 +154,19 @@ function autoShade(cv, thickness = 1) {
   return cv;
 }
 
-function enhance(base, times) { // times: 2 → 32x32 / 4 → 64x64
-  let cv = scale2x(base);
-  if (times === 4) cv = scale2x(cv);
-  return autoShade(cv, times === 4 ? 2 : 1);
+function enhanceTo(base, targetSize) { // scale2x を目標サイズまで繰り返し + 陰影
+  let cv = base;
+  while (cv.width < targetSize) cv = scale2x(cv);
+  return autoShade(cv, cv.width >= 64 ? 2 : 1);
 }
 
-// モンスター: 64x64 の高精細スプライト
+// モンスター: 64x64 の高精細スプライト (元絵は 16x16 でも 32x32 でもよい)
 export function monSpriteCanvas(speciesId) {
   const key = "mon64:" + speciesId;
   if (!spriteCache.has(key)) {
     const def = MON_SPRITES[speciesId];
     if (!def) throw new Error("no sprite: " + speciesId);
-    spriteCache.set(key, enhance(renderPixelRows(def.rows, def.pal, 1), 4));
+    spriteCache.set(key, enhanceTo(renderPixelRows(def.rows, def.pal, 1), 64));
   }
   return spriteCache.get(key);
 }
@@ -179,7 +181,8 @@ export function monSilhouette(speciesId, color = "#283048") {
     const def = MON_SPRITES[speciesId];
     const pal = {};
     for (const k of Object.keys(def.pal)) pal[k] = color;
-    let cv = scale2x(scale2x(renderPixelRows(def.rows, pal, 1)));
+    let cv = renderPixelRows(def.rows, pal, 1);
+    while (cv.width < 64) cv = scale2x(cv);
     spriteCache.set(key, cv);
   }
   return spriteCache.get(key);
@@ -197,7 +200,7 @@ export function charSpriteCanvas(palName, dir) {
     if (dir === "down") rows = CHAR_BASE.down;
     else if (dir === "up") rows = CHAR_BASE.up;
     else { rows = CHAR_BASE.side; flip = dir === "right"; }
-    let cv = enhance(renderPixelRows(rows, pal, 1), 2);
+    let cv = enhanceTo(renderPixelRows(rows, pal, 1), 32);
     if (flip) {
       const f = document.createElement("canvas");
       f.width = cv.width; f.height = cv.height;

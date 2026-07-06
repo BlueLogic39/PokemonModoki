@@ -29,11 +29,12 @@ for (const sp of DEX) {
   if (lvl1.length === 0) err(`dex ${sp.id}: Lv5までに覚える技がない`);
 }
 
-// ---- スプライト ----
+// ---- スプライト (16x16 または 32x32) ----
 for (const [id, def] of Object.entries(MON_SPRITES)) {
-  if (def.rows.length !== 16) err(`sprite ${id}: 行数 ${def.rows.length}`);
+  const size = def.rows.length;
+  if (size !== 16 && size !== 32) err(`sprite ${id}: 行数 ${size}`);
   def.rows.forEach((row, i) => {
-    if (row.length !== 8 && row.length !== 16) err(`sprite ${id} 行${i}: 長さ ${row.length}`);
+    if (row.length !== size / 2 && row.length !== size) err(`sprite ${id} 行${i}: 長さ ${row.length} (期待 ${size / 2} か ${size})`);
     for (const ch of row) {
       if (ch !== "." && !def.pal[ch]) err(`sprite ${id} 行${i}: パレットにない文字 '${ch}'`);
     }
