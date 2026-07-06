@@ -54,6 +54,7 @@ function loop(ts) {
     scene.update?.(dt, ts);
     // 下のシーンも描画 (オーバーレイ用)
     const ctx = G.ctx;
+    ctx.imageSmoothingEnabled = false; // 毎フレーム念のためオフ (ブラウザによる補間を防止)
     ctx.fillStyle = "#000";
     ctx.fillRect(0, 0, SCREEN_W, SCREEN_H);
     let start = G.scenes.length - 1;
