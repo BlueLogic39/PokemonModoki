@@ -53,7 +53,10 @@ function loop(ts) {
   // F2: デバッグモード (フィールドなど安全な場面でのみ)
   if (input.justPressed("debug") && !ui.busy()) {
     const top = topScene();
-    if (top?.allowDebug && !top.busy?.()) pushScene(new DebugScene());
+    if (top?.allowDebug && !top.busy?.()) {
+      pushScene(new DebugScene());
+      input.endFrame(); // 同じフレームでデバッグ画面自身が「F2が押された」と誤認して閉じるのを防ぐ
+    }
   }
 
   const scene = topScene();
