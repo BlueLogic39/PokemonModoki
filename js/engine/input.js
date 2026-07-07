@@ -6,6 +6,7 @@ const KEYMAP = {
   z: "a", Enter: "a", " ": "a",
   x: "b", Escape: "b",
   Shift: "run",
+  F2: "debug",
 };
 
 class Input {

@@ -2,6 +2,7 @@
 import { input } from "./engine/input.js";
 import { SCREEN_W, SCREEN_H } from "./engine/render.js";
 import { ui } from "./engine/ui.js";
+import { DebugScene } from "./scenes/debug.js";
 
 export const G = {
   player: null,   // プレイヤーデータ (セーブ対象)
@@ -48,6 +49,12 @@ function loop(ts) {
   last = ts;
   G.time = ts;
   if (G.player) G.player.playSec += dt / 1000;
+
+  // F2: デバッグモード (フィールドなど安全な場面でのみ)
+  if (input.justPressed("debug") && !ui.busy()) {
+    const top = topScene();
+    if (top?.allowDebug && !top.busy?.()) pushScene(new DebugScene());
+  }
 
   const scene = topScene();
   if (scene) {

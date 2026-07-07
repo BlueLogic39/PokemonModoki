@@ -30,6 +30,7 @@ function condOk(cond, player) {
 
 export class OverworldScene {
   constructor() {
+    this.allowDebug = true; // F2でデバッグモードを開ける
     this.map = null;
     this.npcs = [];
     this.moving = false;
