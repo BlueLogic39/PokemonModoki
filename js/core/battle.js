@@ -504,7 +504,11 @@ export class Battle {
     for (const m of parts) {
       if (m.level >= 100) continue;
       ev.push({ t: "msg", text: `${m.name}は ${baseAmount}の けいけんちを もらった!` });
+      const expBefore = m.exp;
+      const levelBefore = m.level;
       const results = gainExp(m, baseAmount);
+      // 経験値バーのアニメ用: 増加前後の経験値とレベルを渡す
+      ev.push({ t: "expGain", uid: m.uid, before: expBefore, after: m.exp, levelBefore, levelAfter: m.level });
       for (const r of results) {
         if (r.type === "levelup") {
           ev.push({ t: "levelup", uid: m.uid });

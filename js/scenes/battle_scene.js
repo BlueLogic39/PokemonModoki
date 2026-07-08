@@ -151,7 +151,14 @@ export class BattleScene {
             const mv = moveData(m.id);
             return `${mv.name}  ${m.pp}/${mv.pp}`;
           });
-          const mi = await ui.ask(labels);
+          const descs = mon.moves.map((m) => {
+            const mv = moveData(m.id);
+            const power = mv.power > 0 ? mv.power : "—";
+            const acc = mv.acc === null ? "—" : mv.acc;
+            const cat = { phys: "ぶつり", spec: "とくしゅ", stat: "へんか" }[mv.cat];
+            return `${mv.type} ${cat}  いりょく${power} めいちゅう${acc}`;
+          });
+          const mi = await ui.ask(labels, { descriptions: descs, descAtTop: true });
           if (mi === -1) continue;
           if (mon.moves[mi].pp <= 0) { await this.say("技の PPが のこっていない!"); continue; }
           return { type: "move", idx: mi };
@@ -293,6 +300,14 @@ export class BattleScene {
           this.faintAnim = null;
           break;
         }
+        case "expGain": {
+          if (this.mode === "guest") break; // 通信戦は経験値なし
+          const mon = this.battle.me.party.find((m) => m.uid === e.uid);
+          if (mon && this.battle.me.mon() === mon) {
+            await this.animateExp(e.before, e.after, e.levelBefore, e.levelAfter);
+          }
+          break;
+        }
         case "levelup": {
           audio.sfx("levelup");
           if (this.mode !== "guest") {
@@ -334,6 +349,29 @@ export class BattleScene {
       d.hp += d.hp < to ? Math.min(step, to - d.hp) : -Math.min(step, d.hp - to);
       await sleep(20);
     }
+  }
+
+  // 経験値バーを before→after へアニメーション (レベルの境界で満タン→0に巻き戻す)
+  async animateExp(before, after, lvBefore, lvAfter) {
+    const d = this.disp.me;
+    d.level = lvBefore;
+    let cur = before;
+    const step = Math.max(1, Math.ceil((after - before) / 45));
+    let ticks = 0;
+    while (cur < after) {
+      cur = Math.min(after, cur + step);
+      const nextLvExp = expForLevel(d.level + 1);
+      if (cur >= nextLvExp && d.level < lvAfter) {
+        d.exp = nextLvExp; // いったん満タン表示
+        await sleep(60);
+        d.level++;         // 次のレベルへ (バーは0から)
+      }
+      d.exp = cur;
+      if (ticks++ % 3 === 0) audio.sfx("select"); // 上昇音 (小刻み)
+      await sleep(18);
+    }
+    d.exp = after;
+    d.level = lvAfter;
   }
 
   async handleLearn(e) {
@@ -481,6 +519,14 @@ export class BattleScene {
     // 自分情報
     if (this.disp.me) this.drawInfoBox(ctx, this.disp.me, 132, 78, true);
 
+    // 手持ちの のこり数 (小さなボール)。ひんしは グレーアウト。
+    if (this.o.kind !== "wild") {
+      const fs = this.partyStates("foe");
+      if (fs) this.drawPartyDots(ctx, fs, 6, 0);
+    }
+    const ms = this.partyStates("me");
+    if (ms) this.drawPartyDots(ctx, ms, 132, 71);
+
     // 行動待ちプロンプト
     if (this.awaitingAction && this.disp.me) {
       drawWindow(ctx, 2, SCREEN_H - 44, SCREEN_W - 4, 42);
@@ -489,6 +535,34 @@ export class BattleScene {
     if (this.waitingMsg) {
       drawWindow(ctx, 2, SCREEN_H - 44, SCREEN_W - 4, 42);
       drawText(ctx, this.waitingMsg, 10, SCREEN_H - 36, "#303030");
+    }
+  }
+
+  // 手持ちの状態リスト ("ok" / "fnt")。データが無い側は null。
+  partyStates(side) {
+    let party;
+    if (this.mode === "guest") {
+      party = side === "me" ? this.o.myParty : this.o.foeParty;
+    } else if (this.battle) {
+      party = (side === "me" ? this.battle.me : this.battle.foe).party;
+    }
+    if (!party || party.length === 0) return null;
+    return party.map((m) => (isFainted(m) ? "fnt" : "ok"));
+  }
+
+  // 小さなモンスターボールを横一列に。ひんしは グレー。
+  drawPartyDots(ctx, states, x, y) {
+    for (let i = 0; i < states.length; i++) {
+      const cx = x + i * 6 + 2, cy = y + 3;
+      const fainted = states[i] === "fnt";
+      // 輪郭
+      ctx.fillStyle = fainted ? "#70707a" : "#282828";
+      ctx.beginPath(); ctx.arc(cx, cy, 2.6, 0, Math.PI * 2); ctx.fill();
+      // 上半分(赤/グレー) と 下半分(白)
+      ctx.fillStyle = fainted ? "#b0b0b8" : "#e05038";
+      ctx.beginPath(); ctx.arc(cx, cy, 1.7, Math.PI, 0); ctx.fill();
+      ctx.fillStyle = fainted ? "#d8d8dc" : "#f8f8f8";
+      ctx.beginPath(); ctx.arc(cx, cy, 1.7, 0, Math.PI); ctx.fill();
     }
   }
 

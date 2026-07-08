@@ -9,8 +9,9 @@ import {
 } from "../engine/render.js";
 import { SettingsScene } from "./settings.js";
 import { TrainerCardScene } from "./trainer_card.js";
+import { TownMapScene } from "./townmap.js";
 import { DEX, species } from "../data/dex.js";
-import { moveData } from "../data/moves.js";
+import { moveData, moveInfo } from "../data/moves.js";
 import { itemData } from "../data/items.js";
 import { statsOf, isFainted, expForLevel } from "../core/monster.js";
 import { saveGame } from "../core/save.js";
@@ -28,26 +29,31 @@ export class MenuScene {
   enter() { this.run(); }
   async run() {
     while (!this.closed) {
-      const i = await ui.ask(
-        ["モンスター", "バッグ", "ずかん", G.player.name, "つうしん", "レポート", "せってい", "とじる"],
-        { x: SCREEN_W - 76, y: 6 },
-      );
-      if (i === -1 || i === 7) break;
-      if (i === 0) await runSub(PartyScene);
-      else if (i === 1) await runSub(BagScene);
-      else if (i === 2) await runSub(DexScene);
-      else if (i === 3) await runSub(TrainerCardScene); // トレーナーカード
-      else if (i === 4) {
+      // タウンマップは 持っているときだけ メニューに出す
+      const hasMap = !!G.player.flags.has_townmap;
+      const items = ["モンスター", "バッグ", "ずかん"];
+      if (hasMap) items.push("タウンマップ");
+      items.push(G.player.name, "つうしん", "レポート", "せってい", "とじる");
+      const i = await ui.ask(items, { x: SCREEN_W - 84, y: 6 });
+      if (i === -1) break;
+      const label = items[i];
+      if (label === "とじる") break;
+      else if (label === "モンスター") await runSub(PartyScene);
+      else if (label === "バッグ") await runSub(BagScene);
+      else if (label === "ずかん") await runSub(DexScene);
+      else if (label === "タウンマップ") await runSub(TownMapScene);
+      else if (label === G.player.name) await runSub(TrainerCardScene);
+      else if (label === "つうしん") {
         popScene(); // メニューを閉じてから通信ルームへ
         pushScene(new LinkScene());
         return;
       }
-      else if (i === 5) {
+      else if (label === "レポート") {
         const ok = saveGame(G.player);
         audio.sfx(ok ? "heal" : "bump");
         await ui.say(ok ? "レポートに しっかり かきのこした! (セーブ かんりょう)" : "セーブに しっぱいした…");
       }
-      else if (i === 6) await runSub(SettingsScene);
+      else if (label === "せってい") await runSub(SettingsScene);
     }
     popScene();
   }
@@ -62,12 +68,16 @@ export class PartyScene {
     this.idx = 0;
     this.busy = false;
     this.summaryMon = null;
+    this.moveCursor = 0;
     this.swapFrom = -1;
   }
   update() {
     if (this.busy || ui.busy()) return;
     const party = G.player.party;
     if (this.summaryMon) {
+      const nm = this.summaryMon.moves.length;
+      if (input.justPressed("up")) { this.moveCursor = (this.moveCursor + nm - 1) % nm; audio.sfx("select"); }
+      if (input.justPressed("down")) { this.moveCursor = (this.moveCursor + 1) % nm; audio.sfx("select"); }
       if (input.justPressed("a") || input.justPressed("b")) { audio.sfx("cancel"); this.summaryMon = null; }
       return;
     }
@@ -101,7 +111,7 @@ export class PartyScene {
     this.busy = true;
     const sel = await ui.ask(["ようすを みる", "いれかえる", "もどる"]);
     this.busy = false;
-    if (sel === 0) this.summaryMon = G.player.party[this.idx];
+    if (sel === 0) { this.summaryMon = G.player.party[this.idx]; this.moveCursor = 0; }
     else if (sel === 1) { this.swapFrom = this.idx; audio.sfx("select"); }
   }
   draw(ctx, t) {
@@ -150,21 +160,29 @@ export class PartyScene {
       drawText(ctx, String(val), 188, 14 + i * 10, "#303030");
     });
     const next = m.level < 100 ? expForLevel(m.level + 1) - m.exp : 0;
-    drawText(ctx, `つぎのLvまで ${Math.max(0, next)}`, 132, 76, "#606060");
-    if (m.ot && m.ot !== G.player.name) drawText(ctx, `おや: ${m.ot}`, 12, 142, "#8a4fc0");
-    // 技 (下段に横並び)
-    drawText(ctx, "おぼえている わざ", 12, 74, "#606060");
+    drawText(ctx, `つぎのLvまで ${Math.max(0, next)}`, 132, 66, "#606060");
+    if (m.ot && m.ot !== G.player.name) drawText(ctx, `おや: ${m.ot}`, 132, 120, "#8a4fc0");
+    // 技リスト (↑↓で選ぶと下に くわしい せつめい)
+    drawText(ctx, "わざ (↑↓でせつめい)", 12, 74, "#606060");
+    if (this.moveCursor >= m.moves.length) this.moveCursor = 0;
     m.moves.forEach((mv, i) => {
       const md = moveData(mv.id);
-      const col = i % 2, row = i >> 1;
-      const x = 12 + col * 112, y = 88 + row * 26;
-      drawWindow(ctx, x, y, 108, 22);
-      drawText(ctx, md.name, x + 5, y + 3, "#303030");
+      const y = 86 + i * 11;
+      if (i === this.moveCursor) { ctx.fillStyle = "#ffe0a0"; ctx.fillRect(10, y - 1, 112, 10); }
+      drawText(ctx, "▶", 10, y, i === this.moveCursor ? "#c03028" : "#ffe0a0");
       ctx.fillStyle = TYPE_COLORS[md.type];
-      ctx.fillRect(x + 5, y + 13, 34, 7);
-      drawTextShadow(ctx, md.type, x + 7, y + 13, "#fff", "#00000080");
-      drawText(ctx, `PP ${mv.pp}/${md.pp}`, x + 60, y + 13, "#808080");
+      ctx.fillRect(18, y + 1, 6, 6);
+      drawText(ctx, md.name, 28, y, "#303030");
+      drawText(ctx, `${mv.pp}/${md.pp}`, 96, y, "#808080");
     });
+    // 選択中の技の詳細
+    const cur = m.moves[this.moveCursor];
+    if (cur) {
+      drawWindow(ctx, 8, 132, SCREEN_W - 16, 22);
+      const info = moveInfo(cur.id).split("\n");
+      drawText(ctx, info[0], 14, 135, "#303030");
+      drawText(ctx, info[1] || "", 14, 145, "#505050");
+    }
   }
 }
 

@@ -1,8 +1,9 @@
-// トモシビ地方 モンスター図鑑 (全27種・完全オリジナル)
+// トモシビ地方 モンスター図鑑 (全50種・完全オリジナル)
 // base: 種族値 / catchRate: 捕獲率(高いほど捕まえやすい, 最大255)
 // expYield: 倒したときの経験値基準 / evolve: {level, to}
 // learnset: [レベル, 技ID]
-export const DEX = [
+// ※ 各エントリの no は下の DEX_ORDER で最終的に振り直される。
+const _RAW = [
   {
     no: 1, id: "leafy", name: "リーフィ", types: ["くさ"],
     base: { hp: 45, atk: 49, def: 50, spa: 60, spd: 55, spe: 56 },
@@ -355,6 +356,52 @@ export const DEX = [
     desc: "つきよの ばんに とうの てっぺんで つきを ながめる まぼろしの うさぎ。であえたら きっと いいことがある。",
   },
 ];
+
+// 図鑑の表示順 (ポケモン式: 御三家 → タイプごとに進化ラインを隣接 → 伝説を最後)
+const DEX_ORDER = [
+  // 御三家 (くさ → ほのお → みず)
+  "leafy", "foresta", "hinokon", "goemba", "shizumin", "taidarn",
+  // 序盤ノーマル (ねずみ・ひつじ・ねこ)
+  "koronezu", "dotanezu", "mokoppo", "mokoking", "nyaruma", "nyaruda",
+  // とり・ひこう
+  "pipitto", "sorahane", "penpeko", "fukusuke",
+  // むし
+  "kemukemu", "choumai", "tentorin", "tentogado", "punigumo",
+  // くさ (追加)
+  "hanabii", "furawana", "kodamakko",
+  // みず (追加)
+  "pukupuku", "harisuin", "yubake",
+  // でんき
+  "biribo", "raigoron", "denrisu", "raikatto",
+  // ほのお (追加)
+  "pokaguma", "honoguman",
+  // いわ・じめん
+  "gorotan", "gansekioh", "mogurai", "sunagon",
+  // かくとう
+  "kobusshi", "goukender", "panchibi",
+  // どく
+  "dokudama",
+  // エスパー
+  "nemuriro", "yumemira",
+  // ゴースト
+  "hotabi", "onibirasu", "sheetun",
+  // ドラゴン
+  "tatsume", "ryugaoh",
+  // 伝説
+  "tsukiusa", "tengenryu",
+];
+
+const _byIdRaw = Object.fromEntries(_RAW.map((s) => [s.id, s]));
+// DEX_ORDER の順に並べ替え、no を 1 から振り直す (同一参照なので他所からの id 参照も維持)
+export const DEX = DEX_ORDER.map((id, i) => {
+  const s = _byIdRaw[id];
+  if (!s) throw new Error("DEX_ORDER に未定義の id: " + id);
+  s.no = i + 1;
+  return s;
+});
+if (DEX.length !== _RAW.length) {
+  console.warn(`DEX_ORDER の数(${DEX_ORDER.length})が図鑑(${_RAW.length})と一致しません`);
+}
 
 const BY_ID = Object.fromEntries(DEX.map((s) => [s.id, s]));
 

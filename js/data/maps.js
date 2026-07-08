@@ -165,7 +165,7 @@ MAPS.route1 = {
   music: "route",
   encounters: {
     rate: 0.14, tiles: "G",
-    table: [["koronezu", 2, 4, 40], ["pipitto", 2, 4, 35], ["kemukemu", 2, 3, 25]],
+    table: [["koronezu", 2, 4, 25], ["pipitto", 2, 4, 22], ["kemukemu", 2, 3, 18], ["mokoppo", 2, 4, 20], ["hanabii", 2, 4, 15]],
   },
   tiles: [
     "TTTTTTTTppTTTTTTTT",
@@ -263,8 +263,12 @@ MAPS.komorebi = {
   npcs: [
     { id: "komo_boy", x: 14, y: 6, pal: "boy", dir: "down", wander: true, lines: ["ジムリーダーの ミドリさんは むしタイプの つかいてだよ。", "ほのおや ひこうタイプが とくいなら らくしょうかも!"] },
     { id: "komo_old", x: 4, y: 11, pal: "oldman", dir: "down", lines: ["ひがしの どうくつを ぬけると みなとまち ミナトへ いける。", "どうくつは くらくて あぶない。 かいふくの じゅんびを わすれるな。"] },
+    { id: "komo_assistant", x: 18, y: 12, pal: "girl", dir: "right", script: "townMapGift" },
   ],
-  triggers: [],
+  triggers: [
+    { x: 20, y: 12, script: "townMapGift", once: "townmap_gift_done" },
+    { x: 20, y: 13, script: "townMapGift", once: "townmap_gift_done" },
+  ],
 };
 
 MAPS.center_komorebi = makeCenter("center_komorebi", "komorebi", 3, 4);
@@ -330,7 +334,7 @@ MAPS.route2 = {
   music: "route",
   encounters: {
     rate: 0.14, tiles: "G",
-    table: [["koronezu", 5, 8, 30], ["pipitto", 5, 8, 30], ["biribo", 5, 8, 25], ["nemuriro", 6, 8, 15]],
+    table: [["koronezu", 5, 8, 15], ["pipitto", 5, 8, 15], ["biribo", 5, 8, 15], ["nemuriro", 6, 8, 10], ["denrisu", 5, 8, 18], ["tentorin", 5, 8, 15], ["nyaruma", 5, 8, 12]],
   },
   tiles: [
     "TTTTTTTTTTTTTTTTTTTTTTTT",
@@ -389,7 +393,7 @@ MAPS.iwakura = {
   indoor: true,
   encounters: {
     rate: 0.11, tiles: "c",
-    table: [["gorotan", 8, 12, 40], ["dokudama", 8, 12, 35], ["mogurai", 9, 12, 20], ["tatsume", 10, 10, 5]],
+    table: [["gorotan", 8, 12, 35], ["dokudama", 8, 12, 25], ["mogurai", 9, 12, 20], ["punigumo", 8, 12, 15], ["tatsume", 10, 10, 5]],
   },
   tiles: [
     "mmmmmmmmmmmmmmmmmmmm",
@@ -543,7 +547,7 @@ MAPS.route3 = {
   music: "route",
   encounters: {
     rate: 0.14, tiles: "G",
-    table: [["biribo", 12, 16, 30], ["kobusshi", 13, 16, 25], ["dotanezu", 13, 16, 20], ["pipitto", 12, 15, 15], ["nemuriro", 13, 15, 10]],
+    table: [["biribo", 12, 16, 15], ["kobusshi", 13, 16, 12], ["dotanezu", 13, 16, 12], ["nemuriro", 13, 15, 8], ["pukupuku", 12, 16, 18], ["penpeko", 13, 16, 12], ["panchibi", 13, 16, 12], ["mokoppo", 12, 15, 11]],
   },
   tiles: [
     "TTTTTTTTppTTTTTTTT",
@@ -748,7 +752,7 @@ MAPS.route4 = {
   music: "route",
   encounters: {
     rate: 0.14, tiles: "G",
-    table: [["gorotan", 18, 22, 30], ["hotabi", 18, 22, 25], ["kobusshi", 18, 22, 25], ["sorahane", 20, 22, 10], ["tatsume", 20, 21, 10]],
+    table: [["gorotan", 18, 22, 18], ["hotabi", 18, 22, 15], ["kobusshi", 18, 22, 12], ["pokaguma", 18, 22, 18], ["fukusuke", 19, 22, 12], ["kodamakko", 19, 22, 10], ["sorahane", 20, 22, 6], ["sunagon", 20, 22, 4], ["tatsume", 20, 21, 5]],
   },
   tiles: [
     "TTTTTTTTTTTTTTTTTTTTTTTT",
@@ -953,7 +957,7 @@ MAPS.tower = {
   indoor: true,
   encounters: {
     rate: 0.1, tiles: "M",
-    table: [["hotabi", 20, 26, 60], ["nemuriro", 20, 26, 40]],
+    table: [["hotabi", 20, 26, 30], ["nemuriro", 20, 26, 15], ["sheetun", 20, 26, 25], ["yubake", 21, 26, 15], ["kodamakko", 21, 26, 12], ["tsukiusa", 25, 25, 3]],
   },
   tiles: [
     "wwwwwwwwwwww",
@@ -987,7 +991,7 @@ MAPS.champroad = {
   indoor: true,
   encounters: {
     rate: 0.12, tiles: "c",
-    table: [["gorotan", 28, 32, 30], ["mogurai", 28, 32, 25], ["hotabi", 28, 32, 25], ["dotanezu", 29, 32, 15], ["tatsume", 30, 30, 5]],
+    table: [["gorotan", 28, 32, 20], ["mogurai", 28, 32, 18], ["hotabi", 28, 32, 15], ["dotanezu", 29, 32, 12], ["sunagon", 29, 32, 15], ["tentogado", 29, 32, 10], ["nyaruda", 29, 32, 6], ["tatsume", 30, 30, 4]],
   },
   tiles: [
     "mmmmmmmmccmmmmmm",

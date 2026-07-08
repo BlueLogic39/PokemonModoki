@@ -123,6 +123,14 @@ class MenuWidget {
     return true;
   }
   draw(ctx) {
+    // カーソル位置の説明パネル (opts.descriptions があれば)
+    if (this.opts.descriptions && this.opts.descriptions[this.idx]) {
+      const lines = String(this.opts.descriptions[this.idx]).split("\n");
+      const ph = lines.length * 11 + 8;
+      const py = this.opts.descAtTop ? 2 : SCREEN_H - BOX_H - ph - 1;
+      drawWindow(ctx, 2, py, SCREEN_W - 4, ph);
+      lines.forEach((ln, i) => drawText(ctx, ln, 8, py + 5 + i * 11, "#303030"));
+    }
     drawWindow(ctx, this.x, this.y, this.w, this.h);
     for (let i = 0; i < this.items.length; i++) {
       drawText(ctx, this.items[i], this.x + 14, this.y + 7 + i * LINE_H, "#303030");

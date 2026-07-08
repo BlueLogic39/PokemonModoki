@@ -8,11 +8,12 @@ import {
   SCREEN_W, SCREEN_H, drawText, drawWindow, drawDarkPanel, drawTextShadow, drawMonSprite,
 } from "../engine/render.js";
 import { DEX } from "../data/dex.js";
-import { TYPE_COLORS } from "../data/types.js";
+import { TYPES, TYPE_COLORS, typeMultiplier } from "../data/types.js";
 import { makeMon, healMon } from "../core/monster.js";
 
 const MENU = [
   "モンスターギャラリー",
+  "タイプそうせいひょう",
   "ずかんを ぜんぶ うめる",
   "おかね +100000",
   "バッジを ぜんぶ もらう",
@@ -31,7 +32,8 @@ export class DebugScene {
   update() {
     if (this.busy || ui.busy()) return;
     if (this.mode === "menu") this.updateMenu();
-    else this.updateGallery();
+    else if (this.mode === "gallery") this.updateGallery();
+    else if (this.mode === "typechart") this.updateTypeChart();
   }
 
   updateMenu() {
@@ -42,23 +44,24 @@ export class DebugScene {
     audio.sfx("confirm");
     const i = this.idx;
     if (i === 0) { this.mode = "gallery"; return; }
-    if (i === 5) { popScene(); return; }
+    if (i === 1) { this.mode = "typechart"; return; }
+    if (i === 6) { popScene(); return; }
     this.runAction(async () => {
       if (!G.player) { await ui.say("ゲームを はじめてから つかってね!"); return; }
-      if (i === 1) {
+      if (i === 2) {
         for (const sp of DEX) { G.player.dexSeen[sp.id] = true; G.player.dexCaught[sp.id] = true; }
         audio.sfx("heal");
-        await ui.say("ずかんを コンプリートした! (27/27)");
-      } else if (i === 2) {
+        await ui.say(`ずかんを コンプリートした! (${DEX.length}/${DEX.length})`);
+      } else if (i === 3) {
         G.player.money += 100000;
         audio.sfx("confirm");
         await ui.say(`おかねを 100000円 てにいれた! (いま ${G.player.money}円)`);
-      } else if (i === 3) {
+      } else if (i === 4) {
         G.player.badges = ["フォレストバッジ", "マリンバッジ", "ボルトバッジ", "ゴーストバッジ"];
         G.player.flags.badge1 = G.player.flags.badge2 = G.player.flags.badge3 = G.player.flags.badge4 = true;
         audio.sfx("badge");
         await ui.say("バッジを 4つ てにいれた!");
-      } else if (i === 4) {
+      } else if (i === 5) {
         for (const m of G.player.party) healMon(m);
         audio.sfx("heal");
         await ui.say("てもちの モンスターが ぜんかいふくした!");
@@ -74,6 +77,13 @@ export class DebugScene {
     if (input.justPressed("down")) { this.galIdx = (this.galIdx + 5) % n; audio.sfx("select"); }
     if (input.justPressed("b")) { audio.sfx("cancel"); this.mode = "menu"; return; }
     if (input.justPressed("a")) this.runAction(() => this.giveFlow());
+  }
+
+  updateTypeChart() {
+    const n = TYPES.length;
+    if (input.justPressed("up")) { this.tcRow = ((this.tcRow ?? 0) + n - 1) % n; audio.sfx("select"); }
+    if (input.justPressed("down")) { this.tcRow = ((this.tcRow ?? 0) + 1) % n; audio.sfx("select"); }
+    if (input.justPressed("b")) { audio.sfx("cancel"); this.mode = "menu"; return; }
   }
 
   async giveFlow() {
@@ -103,6 +113,50 @@ export class DebugScene {
     try { await fn(); } finally { this.busy = false; }
   }
 
+  // タイプ相性表: 縦=こうげき側、横=ぼうぎょ側。選択中の行の詳細も表示。
+  drawTypeChart(ctx) {
+    const row = this.tcRow ?? 0;
+    drawTextShadow(ctx, "タイプ そうせいひょう (↑↓:こうげきタイプ)", 6, 5, "#7ee0a0");
+    const n = TYPES.length;
+    const cell = 15, ox = 30, oy = 22;
+    // ヘッダー (ぼうぎょ側の色帯)
+    for (let j = 0; j < n; j++) {
+      ctx.fillStyle = TYPE_COLORS[TYPES[j]];
+      ctx.fillRect(ox + j * cell, oy, cell - 1, 8);
+    }
+    // マトリクス
+    for (let i = 0; i < n; i++) {
+      const y = oy + 10 + i * cell;
+      // 行ラベル (こうげきタイプの色)
+      ctx.fillStyle = TYPE_COLORS[TYPES[i]];
+      ctx.fillRect(2, y, 26, cell - 1);
+      drawTextShadow(ctx, TYPES[i].slice(0, 3), 4, y + 3, "#fff", "#00000090");
+      if (i === row) { ctx.strokeStyle = "#ffffff"; ctx.lineWidth = 1; ctx.strokeRect(2, y - 0.5, ox + n * cell - 2, cell); }
+      for (let j = 0; j < n; j++) {
+        const m = typeMultiplier(TYPES[i], [TYPES[j]]);
+        const x = ox + j * cell;
+        let col = null, label = "";
+        if (m === 0) { col = "#404048"; label = "0"; }
+        else if (m === 2) { col = "#e0503820"; label = "◎"; }
+        else if (m === 0.5) { col = "#4a6ad820"; label = "▲"; }
+        if (col) { ctx.fillStyle = col; ctx.fillRect(x, y, cell - 1, cell - 1); }
+        if (label) {
+          const c = m === 2 ? "#e05038" : m === 0 ? "#c8c8c8" : "#5a8ad8";
+          drawText(ctx, label, x + 4, y + 4, c);
+        }
+      }
+    }
+    // 選択行の詳細
+    const atk = TYPES[row];
+    const strong = TYPES.filter((d) => typeMultiplier(atk, [d]) === 2);
+    const weak = TYPES.filter((d) => typeMultiplier(atk, [d]) === 0.5);
+    const none = TYPES.filter((d) => typeMultiplier(atk, [d]) === 0);
+    let dy = SCREEN_H - 34;
+    drawText(ctx, `${atk}わざ が こうかばつぐん(◎): ${strong.join("") || "なし"}`, 6, dy, "#e05038");
+    drawText(ctx, `いまひとつ(▲): ${weak.join("") || "なし"}`, 6, dy + 11, "#5a8ad8");
+    drawText(ctx, `こうかなし(0): ${none.join("") || "なし"}   (Xでもどる)`, 6, dy + 22, "#a0a0a0");
+  }
+
   // ---------- 描画 ----------
   draw(ctx, t) {
     drawDarkPanel(ctx, 0, 0, SCREEN_W, SCREEN_H);
@@ -117,6 +171,7 @@ export class DebugScene {
       drawTextShadow(ctx, "※ セーブすると チートも きろくされます", 8, SCREEN_H - 12, "#a0a8c8", "#00000080");
       return;
     }
+    if (this.mode === "typechart") { this.drawTypeChart(ctx); return; }
     // ギャラリー
     const sp = DEX[this.galIdx];
     drawTextShadow(ctx, `モンスターギャラリー  No.${String(sp.no).padStart(3, "0")} (${this.galIdx + 1}/${DEX.length})`, 8, 6, "#7ee0a0");

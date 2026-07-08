@@ -353,6 +353,21 @@ export const SCRIPTS = {
     ctx.warp("player_home", 4, 5);
   },
 
+  // ---------- タウンマップ ----------
+  async townMapGift(ctx) {
+    if (ctx.hasFlag("has_townmap")) {
+      await ctx.say("はかせの じょしゅ『タウンマップ、 やくに たってる? メニューから いつでも みられるよ!』");
+      return;
+    }
+    await ctx.say("はかせの じょしゅ『あっ、 まって! きみ トモシビちほうを たびするんだよね?』");
+    await ctx.say("はかせの じょしゅ『わたしは カエデはかせの じょしゅ。 これから ひがしへ むかうなら、 これを もっていって!』");
+    ctx.sfx("confirm");
+    ctx.setFlag("has_townmap", true);
+    await ctx.say("『タウンマップ』を てにいれた!");
+    await ctx.say("はかせの じょしゅ『メニューを ひらくと 「タウンマップ」が えらべるよ。 いまいる ばしょが ぴかぴか ひかるんだ。』");
+    await ctx.say("はかせの じょしゅ『2ばんどうろの さきは イワクラどうくつ。 きをつけてね!』");
+  },
+
   // ---------- 施設 ----------
   async nurseHeal(ctx) {
     await ctx.say("『ようこそ かいふくセンターへ!』");

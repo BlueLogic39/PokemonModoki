@@ -258,6 +258,7 @@ export class LinkScene {
           music: "battle",
           myParty: myClones,
           myActive: 0,
+          foeParty: theirClones, // 相手の手持ち数(ボール表示)用
           foeSummary: summaryOf(hostActive),
           foeTrainer: { name: this.peerName },
           remote: {
